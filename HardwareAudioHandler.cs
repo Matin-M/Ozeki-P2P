@@ -116,5 +116,14 @@ namespace MediaServices
             }
         }
 
+        public static void setAndStartTTSMessage(string message)
+        {
+            if (textToSpeech != null)
+            {
+                textToSpeech.AddText(message);
+                textToSpeech.Start();
+            }
+        }
+
     }
 }

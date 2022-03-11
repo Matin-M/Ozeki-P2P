@@ -32,8 +32,12 @@ namespace MediaServices
         //Call management
         private bool incomingCall = false;
         private bool isRegistered = false;
-        private MediaType mediaType;
+        public MediaType mediaType;
         private string mediaParameters;
+        //Event handlers
+        public event EventHandler IncomingCall;
+        public event EventHandler<RegistrationStateChangedArgs> RegistrationReady;
+        public event EventHandler<CallStateChangedArgs> CallStateChanged;
 
         public VoIPHandler(string sipID, string sipAddress, Int32 localPort, string localIpAddress)
         {
@@ -42,7 +46,6 @@ namespace MediaServices
             this.sipAddress = sipAddress;
             this.localIpAddress = localIpAddress;
             this.localPort = localPort;
-            this.mediaType = MediaType.MP3;
 
             try
             {
@@ -59,12 +62,10 @@ namespace MediaServices
                 if (localPort == 0) this.localPort = 5060;
                 SIPAddress sipIdentity = new SIPAddress(sipID, sipAddress);
                 var config = new DirectIPPhoneLineConfig(localIpAddress, localPort, sipIdentity, TransportType.Udp);
-
                 phoneLine = softphone.CreateDirectIPPhoneLine(config);
                 //Configure codecs:
                 foreach (var s in softphone.Codecs)
                 {
-                    // This line disables all of the default codecs that are used.
                     softphone.DisableCodec(s.PayloadType);
                 }
                 softphone.EnableCodec(CodecPayloadType.G729);
@@ -86,14 +87,18 @@ namespace MediaServices
 
             if (e.State == RegState.RegistrationSucceeded)
             {
-                Console.WriteLine("Registration succeeded - Online!");
                 isRegistered = true;
+                DispatchAsync(() =>
+                {
+                    var handler = RegistrationReady;
+                    if (handler != null)
+                        handler(this, e);
+                });
             }
         }
 
         void softphone_IncomingCall(object sender, VoIPEventArgs<IPhoneCall> e)
         {
-            Console.WriteLine("Incoming call!");
             call = e.Item;
             caller = call.DialInfo.CallerID;
             incomingCall = true;
@@ -102,13 +107,33 @@ namespace MediaServices
 
             DispatchAsync(() =>
             {
-                call.Answer();
+                var handler = IncomingCall;
+                if (handler != null)
+                    handler(this, EventArgs.Empty);
             });
+        }
+
+        public void AcceptCall()
+        {
+            if (incomingCall)
+            {
+                incomingCall = false;
+                call.Answer();
+            }
+        }
+
+        public void HangUp()
+        {
+            if(call != null)
+            {
+                call.HangUp();
+                call = null;
+            }
         }
 
         void call_CallStateChanged(object sender, CallStateChangedArgs e)
         {
-            Console.WriteLine("Call state: {0}.", e.State);
+            //Console.WriteLine("Call state: {0}.", e.State);
 
             if(e.State == CallState.Error)
             {
@@ -117,39 +142,16 @@ namespace MediaServices
 
             if (e.State == CallState.Answered)
             {
-                caller = call.DialInfo.CallerID;
-                Console.WriteLine("Answering Call...");
-                mediaReceiver.AttachToCall(call);
-
-                Console.Write("Start Media/Enter Message: ");
-                var input = Console.ReadLine();
                 
-                if (input.Equals("message"))
+                DispatchAsync(() =>
                 {
-                    
-                    while (true)
-                    {
-                        //Console.WriteLine("Enter address");
-                        //var address = Console.ReadLine();
-                        Console.Write("Enter a message: ");
-                        var message = Console.ReadLine();
-                        if (message.Equals("(exit)")) break;
-                        sendMessage(message);
-                    }
-                    
-                }
-                
-                HardwareAudioHandler.initPlaybackDevice(mediaType, "../../Resources/beatles.mp3");
-                Console.WriteLine("Playback initialized");
-                HardwareAudioHandler.connectPlaybackDeviceToSender(ref mediaSender, mediaType);
-                Console.WriteLine("Playback connected");
-                mediaSender.AttachToCall(call);
-                Console.WriteLine("Playback attatched to call.");
-                HardwareAudioHandler.mp3Player.Start();
+                    caller = call.DialInfo.CallerID;
+                    mediaReceiver.AttachToCall(call);
 
-                Console.WriteLine("Stop Media:");
-                Console.ReadLine();
-                HardwareAudioHandler.mp3Player.Stop();
+                    var handler = CallStateChanged;
+                    if (handler != null)
+                        handler(this, e);
+                });
 
             }
 
@@ -159,6 +161,23 @@ namespace MediaServices
                 Console.WriteLine("Call Terminated");
             }
         }
+
+        public void initializeAudioPlayers(MediaType mediaType, string parameters)
+        {
+            HardwareAudioHandler.initPlaybackDevice(mediaType, parameters);
+            Console.WriteLine("Playback initialized");
+            HardwareAudioHandler.connectPlaybackDeviceToSender(ref mediaSender, mediaType);
+            Console.WriteLine("Playback connected");
+            mediaSender.AttachToCall(call);
+            Console.WriteLine("Playback attatched to call.");
+        }
+
+        public void closeAudioPlayers()
+        {
+            mediaReceiver.Detach();
+            mediaSender.Detach();
+        }
+
 
         public void makeCall(string remoteAddress, string remotePort, SIPAddress callerID, MediaType mediaType)
         {
