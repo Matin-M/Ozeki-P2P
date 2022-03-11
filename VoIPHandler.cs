@@ -70,7 +70,6 @@ namespace MediaServices
                 softphone.EnableCodec(CodecPayloadType.G729);
                 phoneLine.RegistrationStateChanged += line_RegStateChanged;
                 softphone.IncomingCall += softphone_IncomingCall;
-                phoneLine.InstantMessaging.MessageReceived += phoneLine_InstantMessageReceived;
                 softphone.RegisterPhoneLine(phoneLine);
             }
             catch(Exception e)
@@ -183,19 +182,6 @@ namespace MediaServices
             call.SendInstantMessage(message);
         }
 
-        void phoneLine_InstantMessageReceived(object sender, InstantMessage e)
-        {
-            DispatchAsync(() =>
-            {
-                Console.Write("\nMessage received from {0}: {1}", e.Sender, e.Content);
-                /*
-                var handler = IncomingMessage;
-                if (handler != null)
-                    handler(this, e);
-                */
-            });
-            
-        }
 
         void call_InstantMessageReceived(object sender, InstantMessage e)
         {
