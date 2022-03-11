@@ -32,7 +32,7 @@ namespace MediaServices
         //Call management
         private bool incomingCall = false;
         private bool isRegistered = false;
-        private MediaType mediaType;
+        public MediaType mediaType;
         private string mediaParameters;
         //Event handlers
         public event EventHandler IncomingCall;
@@ -133,7 +133,7 @@ namespace MediaServices
 
         void call_CallStateChanged(object sender, CallStateChangedArgs e)
         {
-            Console.WriteLine("Call state: {0}.", e.State);
+            //Console.WriteLine("Call state: {0}.", e.State);
 
             if(e.State == CallState.Error)
             {
@@ -147,14 +147,10 @@ namespace MediaServices
                 {
                     caller = call.DialInfo.CallerID;
                     mediaReceiver.AttachToCall(call);
+
                     var handler = CallStateChanged;
                     if (handler != null)
                         handler(this, e);
-
-                    
-                    HardwareAudioHandler.connectPlaybackDeviceToSender(ref mediaSender, mediaType);
-                    Console.WriteLine("Playback connected");
-                    mediaSender.AttachToCall(call);
                 });
 
             }
@@ -165,6 +161,17 @@ namespace MediaServices
                 Console.WriteLine("Call Terminated");
             }
         }
+
+        public void initializeAudioPlayers(MediaType mediaType, string parameters)
+        {
+            HardwareAudioHandler.initPlaybackDevice(mediaType, parameters);
+            Console.WriteLine("Playback initialized");
+            HardwareAudioHandler.connectPlaybackDeviceToSender(ref mediaSender, mediaType);
+            Console.WriteLine("Playback connected");
+            mediaSender.AttachToCall(call);
+            Console.WriteLine("Playback attatched to call.");
+        }
+
 
         public void makeCall(string remoteAddress, string remotePort, SIPAddress callerID, MediaType mediaType)
         {
