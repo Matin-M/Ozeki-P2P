@@ -172,6 +172,12 @@ namespace MediaServices
             Console.WriteLine("Playback attatched to call.");
         }
 
+        public void closeAudioPlayers()
+        {
+            mediaReceiver.Detach();
+            mediaSender.Detach();
+        }
+
 
         public void makeCall(string remoteAddress, string remotePort, SIPAddress callerID, MediaType mediaType)
         {

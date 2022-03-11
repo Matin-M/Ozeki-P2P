@@ -41,9 +41,8 @@ namespace MediaServices
                 voIP.makeCall(LOCALADDRESS, portToCall, new SIPAddress(sipIDToCall, sipAddressToCall), MediaType.MP3);
             }
 
+            Console.WriteLine("Waiting for Call(s)...");
 
-
-            //Block main thread
             BlockExit();
         }
 
@@ -130,6 +129,10 @@ namespace MediaServices
                         var phrase = Console.ReadLine();
                         HardwareAudioHandler.setAndStartTTSMessage(phrase);
 
+                        Console.WriteLine("Stop TTS:");
+                        Console.ReadLine();
+                        HardwareAudioHandler.textToSpeech.Stop();
+
                     }
 
                     Console.WriteLine("Playback initialized");
@@ -137,6 +140,7 @@ namespace MediaServices
                 else
                 {
                     Console.WriteLine("Hanging up call...");
+                    voIP.closeAudioPlayers();
                     voIP.HangUp();
                     break;
                 }
