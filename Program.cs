@@ -84,17 +84,6 @@ namespace MediaServices
                 }
                 else if (input.Equals("audio"))
                 {
-                    /*
-                     * Notes:
-                     * -When a user wants to transmit audio, the device accociated with that type needs to be:
-                     *  -Initialized(for wav, tts, and mp3 player, a file path/message needs to be supplied).
-                     *  -Connected to the media sernder(look in voiphandler).
-                     *  -Started.
-                     * 
-                     * -This all needs to be done HERE. Hardware handler should expose functions that should enable this.
-                     * -This should be done in a way that respects encapsulation and proper event driven architecture. 
-                     *  Meaning, this class should not be accessing variables in VoIP handler and in HardwareAudioHandler.
-                     */
                     Console.Write("What type of media do you want to transmit? ");
                     MediaType mediaType = (MediaType)Enum.Parse(typeof(MediaType), Console.ReadLine());
                     if (mediaType == MediaType.MP3)
@@ -146,6 +135,11 @@ namespace MediaServices
                 }
             }
 
+        }
+
+        public void softphone_incomingMessage(object sender, InstantMessage e)
+        {
+            Console.Write("\nMessage received from {0}: {1}", e.Sender, e.Content);
         }
 
         private static void BlockExit()
