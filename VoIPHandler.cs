@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading;
-using Ozeki.Media;
+using Ozeki.Media.Codec;
+using Ozeki.Media.MediaHandlers;
 using Ozeki.Network;
 using Ozeki.VoIP;
+using Ozeki.VoIP.SDK;
+using Ozeki.VoIP.SIP;
 using TransportType = Ozeki.Network.TransportType;
 
 namespace MediaServices
@@ -38,7 +37,7 @@ namespace MediaServices
         public event EventHandler IncomingCall;
         public event EventHandler<RegistrationStateChangedArgs> RegistrationReady;
         public event EventHandler<CallStateChangedArgs> CallStateChanged;
-        public event EventHandler<InstantMessage> MessageReceived;
+        public event EventHandler<InstantMessage> IncomingMessage;
 
         public VoIPHandler(string sipID, string sipAddress, Int32 localPort, string localIpAddress)
         {

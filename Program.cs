@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using Ozeki.Media;
-using Ozeki.VoIP;
+using Ozeki.VoIP.SIP;
 
 namespace MediaServices
 {
     class Program
     {
         static VoIPHandler voIP;
+        //Replace with your local IP address. Hardcoded for testing purposes.
         const string LOCALADDRESS = "192.168.64.3";   
 
         static void Main(string[] args)
@@ -28,6 +25,7 @@ namespace MediaServices
             voIP.IncomingCall += softphone_IncomingCall;
             voIP.CallStateChanged += softphone_CallStateChanged;
             voIP.RegistrationReady += softphone_RegistrationReady;
+            voIP.IncomingMessage += softphone_incomingMessage;
 
             Console.Write("Would you like to make a call? ");
             if (Console.ReadLine().Equals("y"))
@@ -137,7 +135,7 @@ namespace MediaServices
 
         }
 
-        public void softphone_incomingMessage(object sender, InstantMessage e)
+        static void softphone_incomingMessage(object sender, InstantMessage e)
         {
             Console.Write("\nMessage received from {0}: {1}", e.Sender, e.Content);
         }
