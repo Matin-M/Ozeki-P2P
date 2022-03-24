@@ -38,6 +38,7 @@ namespace MediaServices
         public event EventHandler IncomingCall;
         public event EventHandler<RegistrationStateChangedArgs> RegistrationReady;
         public event EventHandler<CallStateChangedArgs> CallStateChanged;
+        public event EventHandler<InstantMessage> MessageReceived;
 
         public VoIPHandler(string sipID, string sipAddress, Int32 localPort, string localIpAddress)
         {
@@ -115,7 +116,7 @@ namespace MediaServices
 
         public void AcceptCall()
         {
-            if (incomingCall)
+            if (incomingCall && call != null)
             {
                 incomingCall = false;
                 call.Answer();
@@ -154,7 +155,6 @@ namespace MediaServices
                 });
 
             }
-
 
             if (e.State.IsCallEnded())
             {
@@ -197,7 +197,6 @@ namespace MediaServices
 
         public void sendMessage(string message)
         {
-            
             call.SendInstantMessage(message);
         }
 
@@ -206,12 +205,9 @@ namespace MediaServices
         {
             DispatchAsync(() =>
             {
-                Console.Write("\nMessage received from {0}: {1}", e.Sender, e.Content);
-                /*
                 var handler = IncomingMessage;
                 if (handler != null)
                     handler(this, e);
-                */
             });
 
         }
